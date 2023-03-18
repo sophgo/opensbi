@@ -202,7 +202,7 @@ int aclint_mtimer_cold_init(struct aclint_mtimer_data *mt,
 					 SBI_DOMAIN_MEMREGION_M_WRITABLE));
 		if (rc)
 			return rc;
-	} else {
+	} else if (!mt->use_extern_domain) {
 		rc = sbi_domain_root_add_memrange(mt->mtime_addr,
 						mt->mtime_size, MTIMER_REGION_ALIGN,
 						(SBI_DOMAIN_MEMREGION_MMIO |
