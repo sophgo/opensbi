@@ -14,11 +14,6 @@ config FDT_TIMER_MTIMER
 	select TIMER_MTIMER
 	default n
 
-config FDT_TIMER_MANGO_MTIMER
-	bool "SOPHGO MANGO ACLINT MTIMER FDT driver"
-	select TIMER_MANGO_MTIMER
-	default n
-
 config FDT_TIMER_PLMT
 	bool "Andes PLMT FDT driver"
 	select TIMER_PLMT
@@ -28,11 +23,6 @@ endif
 
 config TIMER_MTIMER
 	bool "ACLINT MTIMER support"
-	default n
-
-config TIMER_MANGO_MTIMER
-	bool "SOPHGO MANGO ACLINT MTIMER support"
-	select TIMER_MTIMER
 	default n
 
 config TIMER_PLMT
