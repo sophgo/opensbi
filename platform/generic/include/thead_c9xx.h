@@ -124,4 +124,6 @@
 #define THEAD_C9XX_IRQ_PMU_OVF		17
 #define THEAD_C9XX_MIP_MOIP		(_UL(1) << THEAD_C9XX_IRQ_PMU_OVF)
 
+extern const struct sbi_pmu_device thead_c9xx_pmu_device;
+
 #endif

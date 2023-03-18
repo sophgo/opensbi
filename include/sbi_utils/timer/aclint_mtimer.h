@@ -35,6 +35,7 @@ struct aclint_mtimer_data {
 	u32 hart_count;
 	bool has_64bit_mmio;
 	bool has_shared_mtime;
+	bool use_extern_domain;
 	/* Private details (initialized and used by ACLINT MTIMER library) */
 	struct aclint_mtimer_data *time_delta_reference;
 	unsigned long time_delta_computed;
