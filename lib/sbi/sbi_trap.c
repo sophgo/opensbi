@@ -268,16 +268,16 @@ struct sbi_trap_regs *sbi_trap_handler(struct sbi_trap_regs *regs)
 	ulong mtval = csr_read(CSR_MTVAL), mtval2 = 0, mtinst = 0;
 	struct sbi_trap_info trap;
 
+	if (misa_extension('S')) {
+		__asm__ __volatile__("sfence.vma");
+	}
+
 	if (misa_extension('H')) {
 		mtval2 = csr_read(CSR_MTVAL2);
 		mtinst = csr_read(CSR_MTINST);
 	}
 
 	if (mcause & (1UL << (__riscv_xlen - 1))) {
-		if (misa_extension('S')) {
-			__asm__ __volatile__("sfence.vma");
-		}
-
 		if (sbi_hart_has_extension(sbi_scratch_thishart_ptr(),
 					   SBI_HART_EXT_SMAIA))
 			rc = sbi_trap_aia_irq(regs, mcause);
@@ -321,10 +321,6 @@ struct sbi_trap_regs *sbi_trap_handler(struct sbi_trap_regs *regs)
 		trap.tval2 = mtval2;
 		trap.tinst = mtinst;
 		trap.gva   = sbi_regs_gva(regs);
-
-		if (misa_extension('S')) {
-			__asm__ __volatile__("sfence.vma");
-		}
 
 		rc = sbi_trap_redirect(regs, &trap);
 		break;
