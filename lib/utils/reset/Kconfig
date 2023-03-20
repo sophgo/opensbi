@@ -29,6 +29,11 @@ config FDT_RESET_SIFIVE_TEST
 	select SYS_SIFIVE_TEST
 	default n
 
+config FDT_RESET_SOPHGO_MCU
+	bool "Sophgo MCU FDT reset driver"
+	select SYS_SOPHGO_MCU
+	default n
+
 config FDT_RESET_SUNXI_WDT
 	bool "Sunxi WDT FDT reset driver"
 	default n
