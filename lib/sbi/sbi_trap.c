@@ -268,10 +268,6 @@ struct sbi_trap_regs *sbi_trap_handler(struct sbi_trap_regs *regs)
 	ulong mtval = csr_read(CSR_MTVAL), mtval2 = 0, mtinst = 0;
 	struct sbi_trap_info trap;
 
-	if (misa_extension('S')) {
-		__asm__ __volatile__("sfence.vma");
-	}
-
 	if (misa_extension('H')) {
 		mtval2 = csr_read(CSR_MTVAL2);
 		mtinst = csr_read(CSR_MTINST);
