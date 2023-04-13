@@ -140,6 +140,7 @@ static int mango_reset_init(void *fdt, int nodeoff,
 	mango.adapter = adapter;
 
 	sbi_system_reset_add_device(&mango_reset_i2c);
+	fdt_del_node(fdt, nodeoff);
 
 	return 0;
 }
