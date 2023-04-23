@@ -15,6 +15,7 @@
 #include <sbi_utils/i2c/fdt_i2c.h>
 
 #define MANGO_BOARD_TYPE		0x80
+#define MANGO_BOARD_TYPE_MASK		1 << 7
 
 #define REG_MCU_BOARD_TYPE		0x00
 #define REG_MCU_CMD		0x03
@@ -51,7 +52,7 @@ static inline int mango_sanity_check(struct i2c_adapter *adap, uint32_t reg)
 	if (ret)
 		return ret;
 
-	if (val != MANGO_BOARD_TYPE)
+	if ((val & MANGO_BOARD_TYPE_MASK) != MANGO_BOARD_TYPE)
 		return SBI_ENODEV;
 
 	return 0;
