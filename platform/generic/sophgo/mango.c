@@ -24,6 +24,17 @@
 #define SOPHGO_MANGO_TIMER_BASE		0x70ac000000UL
 #define SOPHGO_MANGO_TIMER_OFFSET	0x10000UL
 
+static u32 selected_hartid = -1;
+
+static bool mango_cold_boot_allowed(u32 hartid,
+                                   const struct fdt_match *match)
+{
+        if (selected_hartid != -1)
+                return (selected_hartid == hartid);
+
+        return true;
+}
+
 int mango_early_init(bool cold_boot, const struct fdt_match *match)
 {
 	const struct sbi_platform * plat = sbi_platform_thishart_ptr();
@@ -62,6 +73,7 @@ static const struct fdt_match sophgo_mango_match[] = {
 
 const struct platform_override sophgo_mango = {
 	.match_table		= sophgo_mango_match,
+	.cold_boot_allowed 	= mango_cold_boot_allowed,
 	.early_init		= mango_early_init,
 	.extensions_init	= mango_extensions_init,
 };
