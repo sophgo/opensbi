@@ -20,7 +20,7 @@
 
 /* clang-format on */
 
-#define SBI_TLB_FIFO_NUM_ENTRIES		64
+#define SBI_TLB_FIFO_NUM_ENTRIES		128
 
 struct sbi_scratch;
 
