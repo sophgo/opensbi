@@ -32,7 +32,7 @@ static bool mango_cold_boot_allowed(u32 hartid,
         if (selected_hartid != -1)
                 return (selected_hartid == hartid);
 
-        return true;
+        return (hartid < 64);
 }
 
 int mango_early_init(bool cold_boot, const struct fdt_match *match)
