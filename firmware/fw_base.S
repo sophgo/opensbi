@@ -467,7 +467,7 @@ _start_warm:
 	blt	a4, s7, 1b
 	li	a4, -1
 2:	add	s6, a4, zero
-3:	bge	s6, s7, _start_hang
+3:	bgeu	s6, s7, _start_hang
 
 	/* Find the scratch space based on HART index */
 	lla	tp, _fw_end
