@@ -13,6 +13,9 @@ libsbiutils-objs-$(CONFIG_FDT_GPIO) += gpio/fdt_gpio_drivers.o
 carray-fdt_gpio_drivers-$(CONFIG_FDT_GPIO_SIFIVE) += fdt_gpio_sifive
 libsbiutils-objs-$(CONFIG_FDT_GPIO_SIFIVE) += gpio/fdt_gpio_sifive.o
 
+carray-fdt_gpio_drivers-$(CONFIG_FDT_GPIO_SOPHGO) += fdt_gpio_sophgo
+libsbiutils-objs-$(CONFIG_FDT_GPIO_SOPHGO) += gpio/fdt_gpio_sophgo.o
+
 carray-fdt_gpio_drivers-$(CONFIG_FDT_GPIO_STARFIVE) += fdt_gpio_starfive
 libsbiutils-objs-$(CONFIG_FDT_GPIO_STARFIVE) += gpio/fdt_gpio_starfive.o
 
