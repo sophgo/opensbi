@@ -25,6 +25,7 @@
 #define SOPHGO_GPIO_SWPORTA_CTL_OFFSET	0x08
 
 #define SOPHGO_GPIO_BIT(offset)	(1U << (offset))
+#define SOPHGO_GPIO_STARTUP_FLAG	SOPHGO_GPIO_BIT(16)
 
 struct sophgo_gpio_chip {
 	unsigned long addr;
@@ -74,26 +75,43 @@ static void sophgo_gpio_set(struct gpio_pin *gp, int value)
 
 static int sophgo_gpio_addr_get(void *fdt, int nodeoff, unsigned long *addr)
 {
-	int rc;
+	int parent, len;
 	unsigned long addr_high, addr_low;
+	const fdt32_t *prop_addr;
 
-	rc = fdt_get_node_addr_size(fdt, nodeoff, 1, &addr_low, NULL);
-	if (rc)
-		return rc;
+	parent = fdt_parent_offset(fdt, nodeoff);
+	if (parent < 0)
+		return parent;
 
-	rc = fdt_get_node_addr_size(fdt, nodeoff, 0, &addr_high, NULL);
-	if (rc)
-		return rc;
+	prop_addr = fdt_getprop(fdt, parent, "reg", &len);
+	if (!prop_addr)
+		return SBI_ENODEV;
+
+	addr_high = fdt32_to_cpu(*prop_addr++);
+	addr_low = fdt32_to_cpu(*prop_addr);
 
 	*addr = addr_high << 32 | addr_low;
 
 	return 0;
 }
 
+static void sophgo_system_normal_startup_flag(unsigned long addr)
+{
+	unsigned int v;
+
+	v = readl((volatile void *)(addr + SOPHGO_GPIO_SWPORTA_DDR_OFFSET));
+	v |= SOPHGO_GPIO_STARTUP_FLAG;
+	writel(v, (volatile void *)(addr + SOPHGO_GPIO_SWPORTA_DDR_OFFSET));
+
+	v = readl((volatile void *)(addr + SOPHGO_GPIO_SWPORTA_DR_OFFSET));
+	v |= SOPHGO_GPIO_STARTUP_FLAG;
+	writel(v, (volatile void *)(addr + SOPHGO_GPIO_SWPORTA_DR_OFFSET));
+}
+
 extern struct fdt_gpio fdt_gpio_sophgo;
 
 static int sophgo_gpio_init(void *fdt, int nodeoff, u32 phandle,
-			    const struct fdt_match *match)
+				 const struct fdt_match *match)
 {
 	int rc;
 	struct sophgo_gpio_chip *chip;
@@ -101,14 +119,14 @@ static int sophgo_gpio_init(void *fdt, int nodeoff, u32 phandle,
 
 	if (SOPHGO_GPIO_CHIP_MAX <= sophgo_gpio_chip_count) {
 		rc = SBI_ENOSPC;
-		goto out;
+		return rc;
 	}
 
 	chip = &sophgo_gpio_chip_array[sophgo_gpio_chip_count];
 
 	rc = sophgo_gpio_addr_get(fdt, nodeoff, &addr);
 	if (rc)
-		goto out;
+		return rc;
 
 	chip->addr = addr;
 	chip->chip.driver = &fdt_gpio_sophgo;
@@ -119,14 +137,12 @@ static int sophgo_gpio_init(void *fdt, int nodeoff, u32 phandle,
 	rc = gpio_chip_add(&chip->chip);
 
 	if (rc)
-		goto out;
+		return rc;
 
 	sophgo_gpio_chip_count++;
+	sophgo_system_normal_startup_flag(addr);
 
-out:
-	fdt_del_node(fdt, nodeoff);
-
-	return rc;
+	return 0;
 }
 
 static const struct fdt_match sophgo_gpio_match[] = {
