@@ -91,7 +91,6 @@ static int mango_wdt_reset_init(void *fdt, int nodeoff,
 {
 	unsigned long wdt_addr, top_addr;
 	int rc;
-	// struct device_node *np;
 
 	rc = fdt_get_node_addr_size(fdt, nodeoff, 0, &wdt_addr, NULL);
 	if (rc < 0 || !wdt_addr) {
