@@ -44,11 +44,20 @@
 
 /* clang-format on */
 
+#ifdef CONFIG_PLATFORM_SOPHGO_MANGO
+#define __smp_store_release(p, v)   \
+	do {                        \
+		RISCV_FENCE(rw, w); \
+		*(p) = (v);         \
+		RISCV_FENCE(w, rw); \
+	} while (0)
+#else
 #define __smp_store_release(p, v)   \
 	do {                        \
 		RISCV_FENCE(rw, w); \
 		*(p) = (v);         \
 	} while (0)
+#endif
 
 #define __smp_load_acquire(p)            \
 	({                               \
