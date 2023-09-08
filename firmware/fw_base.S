@@ -757,7 +757,14 @@ memcmp:
 	.globl _trap_handler
 	.globl _trap_exit
 _trap_handler:
-	sfence.vma	zero, t0
+	/* add a pile for sfence workaround */
+	.option push
+	.option norvc
+	.option norelax
+
+	nop
+
+	.option pop
 
 	TRAP_SAVE_AND_SETUP_SP_T0
 

@@ -13,11 +13,13 @@
 #include <thead_c9xx.h>
 #include <sbi/riscv_asm.h>
 #include <sbi/riscv_encoding.h>
+#include <sbi/riscv_barrier.h>
 #include <sbi/sbi_const.h>
 #include <sbi/sbi_ecall_interface.h>
 #include <sbi/sbi_pmu.h>
 #include <sbi/sbi_domain.h>
 #include <sbi/sbi_platform.h>
+#include <sbi/sbi_string.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/timer/aclint_mtimer.h>
 
@@ -36,6 +38,27 @@ static bool mango_cold_boot_allowed(u32 hartid,
         return (hartid < 64);
 }
 
+#define thead_get_local_symbol_address(_name)				\
+	({								\
+		register unsigned long __v;				\
+		__asm__ __volatile__ ("lla %0, " STRINGIFY(_name)	\
+				     : "=r"(__v)			\
+				     :					\
+				     : "memory");			\
+		(void*)__v;						\
+	})
+
+extern const unsigned int thead_patch_sfence_size;
+
+void thead_fixup_sfence(void)
+{
+	void* trap_addr = thead_get_local_symbol_address(_trap_handler);
+	void* patch_addr = thead_get_local_symbol_address(thead_patch_sfence);
+
+	sbi_memcpy(trap_addr, patch_addr, thead_patch_sfence_size);
+	RISCV_FENCE_I;
+}
+
 int mango_early_init(bool cold_boot, const struct fdt_match *match)
 {
 	const struct sbi_platform * plat = sbi_platform_thishart_ptr();
@@ -44,7 +67,8 @@ int mango_early_init(bool cold_boot, const struct fdt_match *match)
 	 * Sophgo mango board use seperate 16/32 timers while initiating,
 	 * merge them as a single domain to avoid wasting.
 	 */
-	if (cold_boot)
+	if (cold_boot) {
+		thead_fixup_sfence();
 		return sbi_domain_root_add_memrange(SOPHGO_MANGO_TIMER_BASE,
 						    SOPHGO_MANGO_TIMER_OFFSET *
 						    sbi_platform_hart_count(plat),
@@ -52,6 +76,8 @@ int mango_early_init(bool cold_boot, const struct fdt_match *match)
 						    (SBI_DOMAIN_MEMREGION_MMIO |
 						     SBI_DOMAIN_MEMREGION_M_READABLE |
 						     SBI_DOMAIN_MEMREGION_M_WRITABLE));
+	}
+
 	return 0;
 }
 
