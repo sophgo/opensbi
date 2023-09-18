@@ -7,3 +7,5 @@
 
 carray-platform_override_modules-$(CONFIG_PLATFORM_SOPHGO_SG2042) += sophgo_sg2042
 platform-objs-$(CONFIG_PLATFORM_SOPHGO_SG2042) += sophgo/sg2042.o
+carray-platform_override_modules-$(CONFIG_PLATFORM_SOPHGO_SG2044) += sophgo_sg2044
+platform-objs-$(CONFIG_PLATFORM_SOPHGO_SG2044) += sophgo/sg2044.o
