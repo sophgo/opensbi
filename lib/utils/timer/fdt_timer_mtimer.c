@@ -143,6 +143,8 @@ static const struct fdt_match timer_mtimer_match[] = {
 	{ .compatible = "thead,c900-clint", .data = &thead_clint_quirks },
 	{ .compatible = "thead,c900-clint-mtimer",
 	  .data = &thead_clint_sep_quirks },
+	{ .compatible = "sophgo,sg2042-clint-mtimer",
+	  .data = &thead_clint_sep_quirks },
 	{ .compatible = "riscv,aclint-mtimer" },
 	{ },
 };
