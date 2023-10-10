@@ -274,10 +274,6 @@ struct sbi_trap_regs *sbi_trap_handler(struct sbi_trap_regs *regs)
 	}
 
 	if (mcause & (1UL << (__riscv_xlen - 1))) {
-		if (misa_extension('S')) {
-			__asm__ __volatile__("sfence.vma");
-		}
-
 		if (sbi_hart_has_extension(sbi_scratch_thishart_ptr(),
 					   SBI_HART_EXT_SMAIA))
 			rc = sbi_trap_aia_irq(regs, mcause);
@@ -321,10 +317,6 @@ struct sbi_trap_regs *sbi_trap_handler(struct sbi_trap_regs *regs)
 		trap.tval2 = mtval2;
 		trap.tinst = mtinst;
 		trap.gva   = sbi_regs_gva(regs);
-
-		if (misa_extension('S')) {
-			__asm__ __volatile__("sfence.vma");
-		}
 
 		rc = sbi_trap_redirect(regs, &trap);
 		break;
