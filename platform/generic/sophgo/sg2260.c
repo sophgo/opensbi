@@ -19,7 +19,7 @@
 #include <sbi/sbi_platform.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 
-static u32 selected_hartid = 0;
+static u32 selected_hartid = -1;
 
 static bool sg2260_cold_boot_allowed(u32 hartid,
                                    const struct fdt_match *match)
