@@ -148,7 +148,7 @@ static void sbi_tlb_local_sfence_vma_asid(struct sbi_tlb_info *tinfo)
 	unsigned long start = tinfo->start;
 	unsigned long size  = tinfo->size;
 	unsigned long asid  = tinfo->asid;
-	unsigned long i;
+	//unsigned long i;
 
 	sbi_pmu_ctr_incr_fw(SBI_PMU_FW_SFENCE_VMA_ASID_RCVD);
 
@@ -161,12 +161,19 @@ static void sbi_tlb_local_sfence_vma_asid(struct sbi_tlb_info *tinfo)
 		return;
 	}
 
+#if 0
 	for (i = 0; i < size; i += PAGE_SIZE) {
 		__asm__ __volatile__("sfence.vma %0, %1"
 				     :
 				     : "r"(start + i), "r"(asid)
 				     : "memory");
 	}
+#else
+	__asm__ __volatile__("sfence.vma x0, %0"
+			:
+			: "r"(asid)
+			: "memory");
+#endif
 }
 
 static void sbi_tlb_local_fence_i(struct sbi_tlb_info *tinfo)
