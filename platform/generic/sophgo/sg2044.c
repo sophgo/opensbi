@@ -21,7 +21,7 @@
 
 static u32 selected_hartid = -1;
 
-static bool sg2260_cold_boot_allowed(u32 hartid,
+static bool sg2044_cold_boot_allowed(u32 hartid,
                                    const struct fdt_match *match)
 {
 	if (selected_hartid != -1)
@@ -30,20 +30,20 @@ static bool sg2260_cold_boot_allowed(u32 hartid,
 	return true;
 }
 
-static int sg2260_extensions_init(const struct fdt_match *match,
+static int sg2044_extensions_init(const struct fdt_match *match,
 				  struct sbi_hart_features *hfeatures)
 {
 	thead_c9xx_register_pmu_device();
 	return 0;
 }
 
-static const struct fdt_match sophgo_sg2260_match[] = {
-	{ .compatible = "sophgo, sg2260" },
+static const struct fdt_match sophgo_sg2044_match[] = {
+	{ .compatible = "sophgo,sg2044" },
 	{ },
 };
 
-const struct platform_override sophgo_sg2260 = {
-	.match_table		= sophgo_sg2260_match,
-	.cold_boot_allowed 	= sg2260_cold_boot_allowed,
-	.extensions_init	= sg2260_extensions_init,
+const struct platform_override sophgo_sg2044 = {
+	.match_table		= sophgo_sg2044_match,
+	.cold_boot_allowed 	= sg2044_cold_boot_allowed,
+	.extensions_init	= sg2044_extensions_init,
 };
