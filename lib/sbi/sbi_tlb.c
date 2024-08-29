@@ -79,6 +79,7 @@ static void sbi_tlb_local_hfence_gvma(struct sbi_tlb_info *tinfo)
 
 static void sbi_tlb_local_sfence_vma(struct sbi_tlb_info *tinfo)
 {
+#ifndef CONFIG_THEAD_C9XX_ERRATA_JTLB
 	unsigned long start = tinfo->start;
 	unsigned long size  = tinfo->size;
 	unsigned long i;
@@ -96,6 +97,11 @@ static void sbi_tlb_local_sfence_vma(struct sbi_tlb_info *tinfo)
 				     : "r"(start + i)
 				     : "memory");
 	}
+#else
+	sbi_pmu_ctr_incr_fw(SBI_PMU_FW_SFENCE_VMA_RCVD);
+
+	tlb_flush_all();
+#endif
 }
 
 static void sbi_tlb_local_hfence_vvma_asid(struct sbi_tlb_info *tinfo)
@@ -145,10 +151,11 @@ static void sbi_tlb_local_hfence_gvma_vmid(struct sbi_tlb_info *tinfo)
 
 static void sbi_tlb_local_sfence_vma_asid(struct sbi_tlb_info *tinfo)
 {
+#ifndef CONFIG_THEAD_C9XX_ERRATA_JTLB
 	unsigned long start = tinfo->start;
 	unsigned long size  = tinfo->size;
 	unsigned long asid  = tinfo->asid;
-	//unsigned long i;
+	unsigned long i;
 
 	sbi_pmu_ctr_incr_fw(SBI_PMU_FW_SFENCE_VMA_ASID_RCVD);
 
@@ -161,7 +168,6 @@ static void sbi_tlb_local_sfence_vma_asid(struct sbi_tlb_info *tinfo)
 		return;
 	}
 
-#if 0
 	for (i = 0; i < size; i += PAGE_SIZE) {
 		__asm__ __volatile__("sfence.vma %0, %1"
 				     :
@@ -169,6 +175,10 @@ static void sbi_tlb_local_sfence_vma_asid(struct sbi_tlb_info *tinfo)
 				     : "memory");
 	}
 #else
+	unsigned long asid  = tinfo->asid;
+
+	sbi_pmu_ctr_incr_fw(SBI_PMU_FW_SFENCE_VMA_ASID_RCVD);
+
 	__asm__ __volatile__("sfence.vma x0, %0"
 			:
 			: "r"(asid)

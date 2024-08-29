@@ -7,3 +7,7 @@ config THEAD_C9XX_PMU
 config THEAD_C9XX_ERRATA
 	bool "T-HEAD c9xx errata support"
 	default n
+
+config THEAD_C9XX_ERRATA_JTLB
+	bool "T-HEAD c9xx errata(JTLB) support"
+	default n
