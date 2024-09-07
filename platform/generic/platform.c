@@ -232,7 +232,7 @@ static int generic_early_init(bool cold_boot)
 		else
 			rc = fdt_serial_init(fdt);
 		if (rc)
-			return rc;
+			return (rc == SBI_ENODEV) ? 0 : rc;
 	}
 
 	if (!generic_plat || !generic_plat->early_init)
