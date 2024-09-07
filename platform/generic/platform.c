@@ -230,7 +230,11 @@ static int generic_early_init(bool cold_boot)
 			rc = semihosting_init();
 		else
 			rc = fdt_serial_init();
-		if (rc)
+
+		/* console is not a necessary device for tp scalar*/
+		if (rc == SBI_ENODEV)
+			return 0;
+		else if (rc)
 			return rc;
 	}
 
