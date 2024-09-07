@@ -255,7 +255,7 @@ static int generic_early_init(bool cold_boot)
 		else
 			rc = fdt_serial_init(fdt);
 		if (rc)
-			return rc;
+			return (rc == SBI_ENODEV) ? 0 : rc;
 
 		fdt_cppc_init(fdt);
 		fdt_hsm_init(fdt);
