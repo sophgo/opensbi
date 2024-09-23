@@ -203,6 +203,17 @@ GENFLAGS	+=	$(libsbiutils-genflags-y)
 GENFLAGS	+=	$(platform-genflags-y)
 GENFLAGS	+=	$(firmware-genflags-y)
 
+define add_define
+    GENFLAGS	+=	-D$(1)$(if $(value $(1)),=$(value $(1)),)
+endef
+
+ifeq (${CONFIG_SKIP_UBOOT},y)
+$(eval $(call add_define,CONFIG_SKIP_UBOOT))
+endif
+ifeq (${CONFIG_SKIP_UBOOT_DEBUG},y)
+$(eval $(call add_define,CONFIG_SKIP_UBOOT_DEBUG))
+endif
+
 CFLAGS		=	-g -Wall -Werror -ffreestanding -nostdlib -fno-strict-aliasing -O2
 CFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
 CFLAGS		+=	-mno-save-restore -mstrict-align

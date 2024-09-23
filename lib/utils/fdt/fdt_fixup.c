@@ -17,6 +17,43 @@
 #include <sbi_utils/fdt/fdt_fixup.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 
+#ifdef CONFIG_SKIP_UBOOT
+#include "cvipart.h"
+
+/* config root */
+#ifdef CONFIG_NAND_SUPPORT
+	#ifdef CONFIG_SKIP_RAMDISK
+		#define ROOTARGS "ubi.mtd=ROOTFS ubi.block=0,0 root=/dev/ubiblock0_0 rootfstype=squashfs"
+
+	#else
+		#define ROOTARGS "ubi.mtd=ROOTFS ubi.block=0,0"
+	#endif /* CONFIG_SKIP_RAMDISK */
+#else
+	#define ROOTARGS "rootfstype=squashfs rootwait ro root=" ROOTFS_DEV
+#endif
+
+/* BOOTARGS */
+#define PARTS  PART_LAYOUT
+
+/* config loglevel */
+#if defined(CONFIG_BUILD_FOR_DEBUG)
+    #define CONSOLE_LOGLEVEL   " loglevel=9 \0"
+    #define EARLYCON_RELEASE   " "
+#elif defined(CONFIG_SKIP_UBOOT_DEBUG)
+    #define CONSOLE_LOGLEVEL   " loglevel=9 \0"
+    #define EARLYCON_RELEASE   " release "
+#else
+    #define CONSOLE_LOGLEVEL   " loglevel=0 \0"
+    #define EARLYCON_RELEASE   " release "
+#endif
+
+
+#define CVI_BOOTAGRS \
+        PARTS " "  \
+        ROOTARGS " " \
+	"console=ttyS0,115200 earlycon=sbi riscv.fwsz=0x80000" CONSOLE_LOGLEVEL
+#endif
+
 void fdt_cpu_fixup(void *fdt)
 {
 	struct sbi_domain *dom = sbi_domain_thishart_ptr();
@@ -265,4 +302,19 @@ void fdt_fixups(void *fdt)
 	fdt_reserved_memory_fixup(fdt);
 }
 
+#ifdef CONFIG_SKIP_UBOOT
+void generic_fdt_fixup_chosen(void)
+{
+	void *fdt;
+	int   nodeoffset;
+	char  *str;		/* used to set string properties */
 
+	fdt = sbi_scratch_thishart_arg1_ptr();
+
+	nodeoffset = fdt_path_offset(fdt, "/chosen");
+
+	// str = "mtdparts=10000000.cvi-spif:512K(fip),1792K(2nd),3072K(jump),384K(PQ),64K(PARAM),64K(PARAM_BAK),64K(ENV),64K(ENV_BAK),2048K(ROOTFS),4096K(DATA) rootwait ro root=/dev/mtdblock8  rootfstype=squashfs console=ttyS0,115200 earlycon=sbi riscv.fwsz=0x80000 loglevel=9";
+	str = CVI_BOOTAGRS;
+	fdt_setprop(fdt, nodeoffset, "bootargs", str, strlen(str) + 1);
+}
+#endif

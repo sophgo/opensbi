@@ -35,112 +35,6 @@
 	"        | |\n"                                     \
 	"        |_|\n\n"
 
-static void sbi_boot_print_banner(struct sbi_scratch *scratch)
-{
-	if (scratch->options & SBI_SCRATCH_NO_BOOT_PRINTS)
-		return;
-
-#ifdef OPENSBI_VERSION_GIT
-	sbi_printf("\nOpenSBI %s\n", OPENSBI_VERSION_GIT);
-#else
-	sbi_printf("\nOpenSBI v%d.%d\n", OPENSBI_VERSION_MAJOR,
-		   OPENSBI_VERSION_MINOR);
-#endif
-
-	sbi_printf(BANNER);
-}
-
-static void sbi_boot_print_general(struct sbi_scratch *scratch)
-{
-	char str[128];
-	const struct sbi_hsm_device *hdev;
-	const struct sbi_ipi_device *idev;
-	const struct sbi_timer_device *tdev;
-	const struct sbi_console_device *cdev;
-	const struct sbi_system_reset_device *srdev;
-	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
-
-	if (scratch->options & SBI_SCRATCH_NO_BOOT_PRINTS)
-		return;
-
-	/* Platform details */
-	sbi_printf("Platform Name             : %s\n",
-		   sbi_platform_name(plat));
-	sbi_platform_get_features_str(plat, str, sizeof(str));
-	sbi_printf("Platform Features         : %s\n", str);
-	sbi_printf("Platform HART Count       : %u\n",
-		   sbi_platform_hart_count(plat));
-	idev = sbi_ipi_get_device();
-	sbi_printf("Platform IPI Device       : %s\n",
-		   (idev) ? idev->name : "---");
-	tdev = sbi_timer_get_device();
-	sbi_printf("Platform Timer Device     : %s\n",
-		   (tdev) ? tdev->name : "---");
-	cdev = sbi_console_get_device();
-	sbi_printf("Platform Console Device   : %s\n",
-		   (cdev) ? cdev->name : "---");
-	hdev = sbi_hsm_get_device();
-	sbi_printf("Platform HSM Device       : %s\n",
-		   (hdev) ? hdev->name : "---");
-	srdev = sbi_system_reset_get_device();
-	sbi_printf("Platform SysReset Device  : %s\n",
-		   (srdev) ? srdev->name : "---");
-
-	/* Firmware details */
-	sbi_printf("Firmware Base             : 0x%lx\n", scratch->fw_start);
-	sbi_printf("Firmware Size             : %d KB\n",
-		   (u32)(scratch->fw_size / 1024));
-
-	/* SBI details */
-	sbi_printf("Runtime SBI Version       : %d.%d\n",
-		   sbi_ecall_version_major(), sbi_ecall_version_minor());
-	sbi_printf("\n");
-}
-
-static void sbi_boot_print_domains(struct sbi_scratch *scratch)
-{
-	if (scratch->options & SBI_SCRATCH_NO_BOOT_PRINTS)
-		return;
-
-	/* Domain details */
-	sbi_domain_dump_all("      ");
-}
-
-static void sbi_boot_print_hart(struct sbi_scratch *scratch, u32 hartid)
-{
-	int xlen;
-	char str[128];
-	const struct sbi_domain *dom = sbi_domain_thishart_ptr();
-
-	if (scratch->options & SBI_SCRATCH_NO_BOOT_PRINTS)
-		return;
-
-	/* Determine MISA XLEN and MISA string */
-	xlen = misa_xlen();
-	if (xlen < 1) {
-		sbi_printf("Error %d getting MISA XLEN\n", xlen);
-		sbi_hart_hang();
-	}
-
-	/* Boot HART details */
-	sbi_printf("Boot HART ID              : %u\n", hartid);
-	sbi_printf("Boot HART Domain          : %s\n", dom->name);
-	misa_string(xlen, str, sizeof(str));
-	sbi_printf("Boot HART ISA             : %s\n", str);
-	sbi_hart_get_features_str(scratch, str, sizeof(str));
-	sbi_printf("Boot HART Features        : %s\n", str);
-	sbi_printf("Boot HART PMP Count       : %d\n",
-		   sbi_hart_pmp_count(scratch));
-	sbi_printf("Boot HART PMP Granularity : %lu\n",
-		   sbi_hart_pmp_granularity(scratch));
-	sbi_printf("Boot HART PMP Address Bits: %d\n",
-		   sbi_hart_pmp_addrbits(scratch));
-	sbi_printf("Boot HART MHPM Count      : %d\n",
-		   sbi_hart_mhpm_count(scratch));
-	sbi_printf("Boot HART MHPM Count      : %d\n",
-		   sbi_hart_mhpm_count(scratch));
-	sbi_hart_delegation_dump(scratch, "Boot HART ", "         ");
-}
 
 static spinlock_t coldboot_lock = SPIN_LOCK_INITIALIZER;
 static struct sbi_hartmask coldboot_wait_hmask = { 0 };
@@ -217,11 +111,14 @@ static void wake_coldboot_harts(struct sbi_scratch *scratch, u32 hartid)
 
 static unsigned long init_count_offset;
 
+#ifdef CONFIG_SKIP_UBOOT
+extern void generic_fdt_fixup_chosen(void);
+#endif
 static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 {
 	int rc;
 	unsigned long *init_count;
-	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
+	// const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 
 	/* Note: This has to be first thing in coldboot init sequence */
 	rc = sbi_scratch_init(scratch);
@@ -242,32 +139,32 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	if (rc)
 		sbi_hart_hang();
 
-	rc = sbi_platform_early_init(plat, TRUE);
-	if (rc)
-		sbi_hart_hang();
+	// rc = sbi_platform_early_init(plat, TRUE);
+	// if (rc)
+	// 	sbi_hart_hang();
 
 	rc = sbi_hart_init(scratch, TRUE);
 	if (rc)
 		sbi_hart_hang();
 
+#if defined(CONFIG_SKIP_UBOOT_DEBUG)
 	rc = sbi_console_init(scratch);
 	if (rc)
 		sbi_hart_hang();
+#endif
 
-	sbi_boot_print_banner(scratch);
+	// rc = sbi_platform_irqchip_init(plat, TRUE);
+	// if (rc) {
+	// 	sbi_printf("%s: platform irqchip init failed (error %d)\n",
+	// 		   __func__, rc);
+	// 	sbi_hart_hang();
+	// }
 
-	rc = sbi_platform_irqchip_init(plat, TRUE);
-	if (rc) {
-		sbi_printf("%s: platform irqchip init failed (error %d)\n",
-			   __func__, rc);
-		sbi_hart_hang();
-	}
-
-	rc = sbi_ipi_init(scratch, TRUE);
-	if (rc) {
-		sbi_printf("%s: ipi init failed (error %d)\n", __func__, rc);
-		sbi_hart_hang();
-	}
+	// rc = sbi_ipi_init(scratch, TRUE);
+	// if (rc) {
+	// 	sbi_printf("%s: ipi init failed (error %d)\n", __func__, rc);
+	// 	sbi_hart_hang();
+	// }
 
 	rc = sbi_tlb_init(scratch, TRUE);
 	if (rc) {
@@ -287,8 +184,6 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 		sbi_hart_hang();
 	}
 
-	sbi_boot_print_general(scratch);
-
 	/*
 	 * Note: Finalize domains after HSM initialization so that we
 	 * can startup non-root domains.
@@ -302,8 +197,6 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 		sbi_hart_hang();
 	}
 
-	sbi_boot_print_domains(scratch);
-
 	rc = sbi_hart_pmp_configure(scratch);
 	if (rc) {
 		sbi_printf("%s: PMP configure failed (error %d)\n",
@@ -315,14 +208,15 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	 * Note: Platform final initialization should be last so that
 	 * it sees correct domain assignment and PMP configuration.
 	 */
-	rc = sbi_platform_final_init(plat, TRUE);
-	if (rc) {
-		sbi_printf("%s: platform final init failed (error %d)\n",
-			   __func__, rc);
-		sbi_hart_hang();
-	}
-
-	sbi_boot_print_hart(scratch, hartid);
+	// rc = sbi_platform_final_init(plat, TRUE);
+	// if (rc) {
+	// 	sbi_printf("%s: platform final init failed (error %d)\n",
+	// 		   __func__, rc);
+	// 	sbi_hart_hang();
+	// }
+#ifdef CONFIG_SKIP_UBOOT
+	generic_fdt_fixup_chosen();
+#endif
 
 	wake_coldboot_harts(scratch, hartid);
 

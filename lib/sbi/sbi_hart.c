@@ -21,9 +21,18 @@
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_string.h>
 #include <sbi/sbi_trap.h>
+#include <sbi/sbi_timer.h>
 
 extern void __sbi_expected_trap(void);
 extern void __sbi_expected_trap_hext(void);
+
+
+// Frequency of ARM arch timer and RISC-V rdtime
+#define SYS_COUNTER_FREQ_IN_SECOND 25000000
+#define TIME_RECORDS_ADDR ( 0x0E000000 + 0x10) // 0x0E000010
+#define TIME_RECORDS_FIELD_KERNEL_START (TIME_RECORDS_ADDR + 0x16)
+
+#define DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
 
 void (*sbi_hart_expected_trap)(void) = &__sbi_expected_trap;
 
@@ -469,6 +478,15 @@ void __attribute__((noreturn)) sbi_hart_hang(void)
 	__builtin_unreachable();
 }
 
+int get_time()
+{
+	unsigned long long boot_us = 0;
+
+	boot_us = sbi_timer_value() / (SYS_COUNTER_FREQ_IN_SECOND / 1000000 );
+
+	return DIV_ROUND_UP(boot_us, 1000);
+}
+
 void __attribute__((noreturn))
 sbi_hart_switch_mode(unsigned long arg0, unsigned long arg1,
 		     unsigned long next_addr, unsigned long next_mode,
@@ -531,6 +549,8 @@ sbi_hart_switch_mode(unsigned long arg0, unsigned long arg1,
 		}
 	}
 
+	*(volatile uint16_t*)TIME_RECORDS_FIELD_KERNEL_START = get_time();
+	
 	register unsigned long a0 asm("a0") = arg0;
 	register unsigned long a1 asm("a1") = arg1;
 	__asm__ __volatile__("mret" : : "r"(a0), "r"(a1));
