@@ -14,9 +14,6 @@
 #include <sbi_utils/reset/fdt_reset.h>
 #include <sbi_utils/i2c/fdt_i2c.h>
 
-#define MANGO_BOARD_TYPE_MASK		0x80
-
-#define REG_BOARD_TYPE			0x00
 #define REG_CMD				0x03
 
 #define CMD_POWEROFF			0x02
@@ -60,22 +57,6 @@ static struct sbi_system_reset_device sg2042_mcu_reset_device = {
 	.system_reset = sg2042_mcu_reset
 };
 
-static int sg2042_mcu_reset_check_board(struct i2c_adapter *adap, uint32_t reg)
-{
-	static uint8_t val;
-	int ret;
-
-	/* check board type */
-	ret = i2c_adapter_reg_read(adap, reg, REG_BOARD_TYPE, &val);
-	if (ret)
-		return ret;
-
-	if (!(val & MANGO_BOARD_TYPE_MASK))
-		return SBI_ENODEV;
-
-	return 0;
-}
-
 static int sg2042_mcu_reset_init(const void *fdt, int nodeoff,
 				 const struct fdt_match *match)
 {
@@ -95,8 +76,6 @@ static int sg2042_mcu_reset_init(const void *fdt, int nodeoff,
 	ret = fdt_i2c_adapter_get(fdt, i2c_bus, &mcu_adapter);
 	if (ret)
 		return ret;
-
-	ret = sg2042_mcu_reset_check_board(mcu_adapter, mcu_reg);
 
 	sbi_system_reset_add_device(&sg2042_mcu_reset_device);
 
