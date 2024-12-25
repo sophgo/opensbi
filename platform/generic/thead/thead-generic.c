@@ -58,6 +58,8 @@ static const struct fdt_match thead_generic_match[] = {
 	{ .compatible = "sophgo,cv1812h", .data = &sophgo_cv1800_quirks },
 	{ .compatible = "sophgo,sg2000", .data = &sophgo_cv1800_quirks },
 	{ .compatible = "sophgo,sg2002", .data = &sophgo_cv1800_quirks },
+	{ .compatible = "sophgo,sg2044", .data = &sophgo_cv1800_quirks },
+	{ .compatible = "sophgo,bm1690", .data = &sophgo_cv1800_quirks },
 	{ .compatible = "thead,th1520", .data = &thead_th1520_quirks },
 	{ .compatible = "canaan,kendryte-k230", .data = &canaan_k230_quirks },
 	{ },
