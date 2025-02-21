@@ -26,6 +26,10 @@ libsbiutils-objs-$(CONFIG_FDT_RESET_SG2042_HWMON_MCU) += reset/fdt_reset_sg2042_
 carray-fdt_reset_drivers-$(CONFIG_FDT_RESET_SUNXI_WDT) += fdt_reset_sunxi_wdt
 libsbiutils-objs-$(CONFIG_FDT_RESET_SUNXI_WDT) += reset/fdt_reset_sunxi_wdt.o
 
+carray-fdt_reset_drivers-$(CONFIG_FDT_RESET_SG2044_MCU) += fdt_reset_sophgo_mcu_poweroff
+carray-fdt_reset_drivers-$(CONFIG_FDT_RESET_SG2044_MCU) += fdt_reset_sophgo_mcu_reboot
+libsbiutils-objs-$(CONFIG_FDT_RESET_SG2044_MCU) += reset/fdt_reset_sg2044_mcu.o
+
 carray-fdt_reset_drivers-$(CONFIG_FDT_RESET_SYSCON) += fdt_syscon_poweroff
 carray-fdt_reset_drivers-$(CONFIG_FDT_RESET_SYSCON) += fdt_syscon_reboot
 libsbiutils-objs-$(CONFIG_FDT_RESET_SYSCON) += reset/fdt_reset_syscon.o

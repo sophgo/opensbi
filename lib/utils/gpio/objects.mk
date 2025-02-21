@@ -10,6 +10,9 @@
 libsbiutils-objs-$(CONFIG_FDT_GPIO) += gpio/fdt_gpio.o
 libsbiutils-objs-$(CONFIG_FDT_GPIO) += gpio/fdt_gpio_drivers.carray.o
 
+carray-fdt_gpio_drivers-$(CONFIG_FDT_GPIO_SOPHGO) += fdt_gpio_sophgo
+libsbiutils-objs-$(CONFIG_FDT_GPIO_SOPHGO) += gpio/fdt_gpio_sophgo.o
+
 carray-fdt_gpio_drivers-$(CONFIG_FDT_GPIO_DESIGNWARE) += fdt_gpio_designware
 libsbiutils-objs-$(CONFIG_FDT_GPIO_DESIGNWARE) += gpio/fdt_gpio_designware.o
 
