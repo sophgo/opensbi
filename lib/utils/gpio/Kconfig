@@ -23,6 +23,10 @@ config FDT_GPIO_STARFIVE
 	default n
 endif
 
+config FDT_GPIO_SOPHGO
+	bool "Sophgo GPIO FDT driver"
+	default n
+
 config GPIO
 	bool "GPIO support"
 	default n
