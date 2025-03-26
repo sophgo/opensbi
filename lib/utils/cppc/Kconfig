@@ -14,6 +14,11 @@ config FDT_CPPC_RPMI
 	depends on FDT_MAILBOX && RPMI_MAILBOX
 	default n
 
+config FDT_CPPC_SG2044
+	bool "FDT SG2044 CPPC driver"
+	select FDT_CLK_SG2044
+	default n
+
 endif
 
 endmenu
