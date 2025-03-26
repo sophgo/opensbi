@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: BSD-2-Clause
+
+menu "Clock Support"
+
+config FDT_CLK
+	bool "FDT based CLK drivers"
+	depends on FDT
+	default n
+
+if FDT_CLK
+
+config FDT_CLK_SG2044
+	bool "SG2044 clock drivers"
+	default n
+
+endif
+
+endmenu
