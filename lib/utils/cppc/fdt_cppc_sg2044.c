@@ -6,50 +6,27 @@
  */
 
 #include <libfdt.h>
-#include <sbi/riscv_io.h>
-#include <sbi/sbi_cppc.h>
-#include <sbi/sbi_ecall_interface.h>
-#include <sbi/sbi_scratch.h>
-#include <sbi_utils/cppc/fdt_cppc.h>
-#include <sbi_utils/clk/sg2044_clk.h>
+#include <sbi/sbi_string.h>
+#include <sbi/sbi_error.h>
 #include <sbi/sbi_console.h>
 #include <sbi/sbi_clk.h>
+#include <sbi/sbi_cppc.h>
+#include <sbi/sbi_ecall_interface.h>
+#include <sbi_utils/cppc/fdt_cppc.h>
 
-#define CPU_CLK_GRANULARITY	25000000UL
 #define CPPC_REGISTER_WIDTH	64
 #define CPPC_REGISTER_NOT_IMPLEMENTED	0
 
-enum {
-	HIGHEST_PERFORMANCE = 0,
-	NOMINAL_PERFORMANCE,
-	LOWEST_NONLINEAR_PERFORMANCE,
-	LOWEST_PERFORMANCE,
-	GUARANTEED_PERFORMANCE_REGISTER,
-	DESIRED_PERFORMANCE_REGISTER,
-	MINIMUM_PERFORMANCE_REGISTER,
-	MAXIMUM_PERFORMANCE_REGISTER,
-	PERFORMANCE_REDUCTION_TOLERANCE_REGISTER,
-	TIME_WINDOW_REGISTER,
-	COUNTER_WRAPAROUND_TIME,
-	REFERENCE_PERFORMANCE_COUNTER_REGISTER,
-	DELIVERED_PERFORMANCE_COUNTER_REGISTER,
-	PERFORMANCE_LIMITED_REGISTER,
-	CPPC_ENABLE_REGISTER,
-	AUTONOMOUS_SELECTION_ENABLE,
-	AUTONOMOUS_ACTIVITY_WINDOW_REGISTER,
-	ENERGY_PERFORMANCE_PREFERENCE_REGISTER,
-	REFERENCE_PERFORMANCE,
-	LOWEST_FREQUENCY,
-	NOMINAL_FREQUENCY,
-};
+static char clock_names[64];
+static uint64_t cpu_clk_granularity;
 
 static int sg2044_cppc_read(unsigned long reg, u64 *val)
 {
 	int rc = SBI_SUCCESS;
 
 	switch (reg) {
-	case DESIRED_PERFORMANCE_REGISTER:
-		*val = sbi_clk_get_rate("mpll1_clock") / CPU_CLK_GRANULARITY;
+	case SBI_CPPC_DESIRED_PERF:
+		*val = sbi_clk_get_rate(clock_names) / cpu_clk_granularity;
 		break;
 	default:
 		rc = SBI_ERR_NOT_SUPPORTED;
@@ -64,8 +41,8 @@ static int sg2044_cppc_write(unsigned long reg, u64 val)
 	int rc = SBI_SUCCESS;
 
 	switch (reg) {
-	case DESIRED_PERFORMANCE_REGISTER:
-		rc = sbi_clk_set_rate("mpll1_clock", val * CPU_CLK_GRANULARITY);
+	case SBI_CPPC_DESIRED_PERF:
+		rc = sbi_clk_set_rate(clock_names, val * cpu_clk_granularity);
 		break;
 	default:
 		rc = SBI_ERR_NOT_SUPPORTED;
@@ -80,7 +57,7 @@ static int sg2044_cppc_probe(unsigned long reg)
 	int rc;
 
 	switch (reg) {
-	case DESIRED_PERFORMANCE_REGISTER:
+	case SBI_CPPC_DESIRED_PERF:
 		rc = CPPC_REGISTER_WIDTH;
 		break;
 	default:
@@ -102,10 +79,24 @@ static int sg2044_cppc_cold_init(const void *fdt, int nodeoff,
 			       const struct fdt_match *match)
 {
 	const struct sbi_clk_device *clk;
+	const fdt32_t *val;
+	int len;
 
 	clk = sbi_clk_get_device(fdt);
 	if (!clk)
 		return -1;
+
+	val = fdt_getprop(fdt, nodeoff, "step", &len);
+	if (!val)
+		return SBI_ENODEV;
+
+	cpu_clk_granularity = ((uint64_t)fdt32_to_cpu(val[0]) << 32) | (uint64_t)fdt32_to_cpu(val[1]);
+
+	val = fdt_getprop(fdt, nodeoff, "clock-names", &len);
+	if (!val)
+		return SBI_ENODEV;
+
+	sbi_strncpy(clock_names, (char *)val, MIN(sizeof(clock_names), len));
 
 	sbi_cppc_set_device(&sbi_sg2044_cppc);
 
