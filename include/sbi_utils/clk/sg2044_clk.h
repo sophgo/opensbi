@@ -3,6 +3,8 @@
  *
  * Copyright (c) 2025 Sophgo Inc.
  *
+ * Authors:
+ *   Haijiao Liu <haijiao.liu@sophgo.com>
  */
 
 #ifndef _SG2044_CLK_H_

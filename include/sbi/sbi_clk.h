@@ -3,6 +3,8 @@
  *
  * Copyright (c) 2025 Sophgo Inc.
  *
+ * Authors:
+ *   Haijiao Liu <haijiao.liu@sophgo.com>
  */
 
 #ifndef __SBI_CLK_H__
@@ -12,19 +14,10 @@
 
 /* clock device */
 struct sbi_clk_device {
-	/* name of the clock device */
 	char name[32];
-
-	/* set clock rate */
 	int (*clk_set_rate)(const char *name, uint64_t rate);
-
-	/* returns clock rate */
 	uint64_t (*clk_get_rate)(const char *name);
-
-	/* enable clock */
 	int (*clk_enable)(const char *name);
-
-	/* disable clock */
 	int (*clk_disable)(const char *name);
 };
 

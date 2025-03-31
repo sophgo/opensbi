@@ -3,6 +3,9 @@
 #
 # Copyright (C) 2025 Sophgo Inc
 #
+# Authors:
+#   Haijiao Liu <haijiao.liu@sophgo.com>
+#
 
 libsbiutils-objs-$(CONFIG_FDT_CLK) += clk/fdt_clk.o
 libsbiutils-objs-$(CONFIG_FDT_CLK) += clk/fdt_clk_drivers.carray.o

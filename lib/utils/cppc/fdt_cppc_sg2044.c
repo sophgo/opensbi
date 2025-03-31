@@ -3,22 +3,24 @@
  *
  * Copyright (c) 2025 Sophgo Inc.
  *
+ * Authors:
+ *   Haijiao Liu <haijiao.liu@sophgo.com>
  */
 
 #include <libfdt.h>
-#include <sbi/sbi_string.h>
 #include <sbi/sbi_error.h>
+#include <sbi/sbi_string.h>
 #include <sbi/sbi_console.h>
+#include <sbi/sbi_ecall_interface.h>
 #include <sbi/sbi_clk.h>
 #include <sbi/sbi_cppc.h>
-#include <sbi/sbi_ecall_interface.h>
 #include <sbi_utils/cppc/fdt_cppc.h>
 
 #define CPPC_REGISTER_WIDTH	64
 #define CPPC_REGISTER_NOT_IMPLEMENTED	0
 
 static char clock_names[64];
-static uint64_t cpu_clk_granularity;
+static uint64_t clk_granularity;
 
 static int sg2044_cppc_read(unsigned long reg, u64 *val)
 {
@@ -26,11 +28,10 @@ static int sg2044_cppc_read(unsigned long reg, u64 *val)
 
 	switch (reg) {
 	case SBI_CPPC_DESIRED_PERF:
-		*val = sbi_clk_get_rate(clock_names) / cpu_clk_granularity;
+		*val = sbi_clk_get_rate(clock_names) / clk_granularity;
 		break;
 	default:
 		rc = SBI_ERR_NOT_SUPPORTED;
-		break;
 	}
 
 	return rc;
@@ -42,11 +43,10 @@ static int sg2044_cppc_write(unsigned long reg, u64 val)
 
 	switch (reg) {
 	case SBI_CPPC_DESIRED_PERF:
-		rc = sbi_clk_set_rate(clock_names, val * cpu_clk_granularity);
+		rc = sbi_clk_set_rate(clock_names, val * clk_granularity);
 		break;
 	default:
 		rc = SBI_ERR_NOT_SUPPORTED;
-		break;
 	}
 
 	return rc;
@@ -62,7 +62,6 @@ static int sg2044_cppc_probe(unsigned long reg)
 		break;
 	default:
 		rc = CPPC_REGISTER_NOT_IMPLEMENTED;
-		break;
 	}
 
 	return rc;
@@ -76,27 +75,29 @@ static struct sbi_cppc_device sbi_sg2044_cppc = {
 };
 
 static int sg2044_cppc_cold_init(const void *fdt, int nodeoff,
-			       const struct fdt_match *match)
+				 const struct fdt_match *match)
 {
 	const struct sbi_clk_device *clk;
 	const fdt32_t *val;
+	const char *name;
 	int len;
 
 	clk = sbi_clk_get_device(fdt);
 	if (!clk)
-		return -1;
+		return SBI_ENODEV;
 
 	val = fdt_getprop(fdt, nodeoff, "step", &len);
 	if (!val)
-		return SBI_ENODEV;
+		return SBI_EINVAL;
 
-	cpu_clk_granularity = ((uint64_t)fdt32_to_cpu(val[0]) << 32) | (uint64_t)fdt32_to_cpu(val[1]);
+	clk_granularity = fdt32_to_cpu(val[0]);
+	clk_granularity = (clk_granularity << 32) | fdt32_to_cpu(val[1]);
 
-	val = fdt_getprop(fdt, nodeoff, "clock-names", &len);
-	if (!val)
-		return SBI_ENODEV;
+	name = fdt_getprop(fdt, nodeoff, "clock-names", &len);
+	if (!name)
+		return SBI_EINVAL;
 
-	sbi_strncpy(clock_names, (char *)val, MIN(sizeof(clock_names), len));
+	sbi_strncpy(clock_names, name, MIN(sizeof(clock_names), len));
 
 	sbi_cppc_set_device(&sbi_sg2044_cppc);
 
