@@ -33,10 +33,6 @@ config FDT_RESET_SG2042_HWMON_MCU
 	bool "Sophgo SG2042 hwmon MCU FDT reset driver"
 	default n
 
-config FDT_RESET_SG2044_MCU
-	bool "Sophgo SG2044 MCU FDT reset driver"
-	default n
-
 config FDT_RESET_SUNXI_WDT
 	bool "Sunxi WDT FDT reset driver"
 	default n
