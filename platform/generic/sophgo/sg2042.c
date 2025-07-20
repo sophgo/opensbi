@@ -19,7 +19,7 @@
 
 #define SOPHGO_SG2042_TIMER_BASE	0x70ac000000ULL
 #define SOPHGO_SG2042_TIMER_SIZE	0x10000UL
-#define SOPHGO_SG2042_TIMER_NUM		16
+#define SOPHGO_SG2042_TIMER_NUM		32
 
 static int sophgo_sg2042_early_init(bool cold_boot)
 {
@@ -32,7 +32,7 @@ static int sophgo_sg2042_early_init(bool cold_boot)
 	thead_register_tlb_flush_trap_handler();
 
 	/*
-	 * Sophgo sg2042 soc use separate 16 timers while initiating,
+	 * Sophgo sg2042 soc use separate 16/32 timers while initiating,
 	 * merge them as a single domain to avoid wasting.
 	 */
 	if (cold_boot)
