@@ -882,12 +882,17 @@ void sbi_pmu_set_device(const struct sbi_pmu_device *dev)
 void sbi_pmu_exit(struct sbi_scratch *scratch)
 {
 	u32 hartid = current_hartid();
+	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 
 	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_11)
 		csr_write(CSR_MCOUNTINHIBIT, 0xFFFFFFF8);
 
 	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_10)
 		csr_write(CSR_MCOUNTEREN, -1);
+
+	if (sbi_platform_force_emulate_time_csr(plat))
+		csr_clear(CSR_MCOUNTEREN, MCOUNTEREN_TM);
+
 	pmu_reset_event_map(hartid);
 }
 

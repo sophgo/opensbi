@@ -68,6 +68,9 @@ struct sbi_platform_operations {
 	/* Check if specified HART is allowed to do cold boot */
 	bool (*cold_boot_allowed)(u32 hartid);
 
+	/* Check if platform force emulate time csr, instead of using csr directly */
+	bool (*force_emulate_time_csr)(void);
+
 	/* Platform nascent initialization */
 	int (*nascent_init)(void);
 
@@ -374,6 +377,20 @@ static inline bool sbi_platform_cold_boot_allowed(
 	if (plat && sbi_platform_ops(plat)->cold_boot_allowed)
 		return sbi_platform_ops(plat)->cold_boot_allowed(hartid);
 	return true;
+}
+
+/**
+ * Check whether given platform should force emulate time CSR
+ *
+ * @param plat pointer to struct sbi_platform
+ *
+ * @return true such platform force emulate time CSR, false otherwise
+ */
+static inline bool sbi_platform_force_emulate_time_csr(const struct sbi_platform *plat)
+{
+	if (plat && sbi_platform_ops(plat)->force_emulate_time_csr)
+		return sbi_platform_ops(plat)->force_emulate_time_csr();
+	return false;
 }
 
 /**

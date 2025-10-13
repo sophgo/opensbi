@@ -20,12 +20,14 @@
 #include <sbi/sbi_platform.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/timer/aclint_mtimer.h>
+#include <libfdt.h>
 
 #define SOPHGO_MANGO_TIMER_BASE		0x70ac000000UL
 #define SOPHGO_MANGO_TIMER_OFFSET	0x10000UL
 
 extern struct sbi_platform platform;
 static u32 selected_hartid = -1;
+static bool force_emulate_time_csr;
 
 static bool mango_cold_boot_allowed(u32 hartid,
                                    const struct fdt_match *match)
@@ -69,6 +71,16 @@ static int mango_extensions_init(const struct fdt_match *match,
 static void mango_fw_init(void *fdt, const struct fdt_match *match)
 {
 	platform.hart_stack_size = 16384;
+
+	if (fdt_node_offset_by_compatible(fdt, 0, "sophgo,sg2042-global-mtimer") > 0)
+		force_emulate_time_csr = true;
+	else
+		force_emulate_time_csr = false;
+}
+
+static bool mango_force_emulate_time_csr(const struct fdt_match *match)
+{
+	return force_emulate_time_csr;
 }
 
 static const struct fdt_match sophgo_mango_match[] = {
@@ -78,8 +90,9 @@ static const struct fdt_match sophgo_mango_match[] = {
 
 const struct platform_override sophgo_mango = {
 	.match_table		= sophgo_mango_match,
-	.fw_init			= mango_fw_init,
-	.cold_boot_allowed 	= mango_cold_boot_allowed,
+	.fw_init		= mango_fw_init,
+	.cold_boot_allowed	= mango_cold_boot_allowed,
+	.force_emulate_time_csr = mango_force_emulate_time_csr,
 	.early_init		= mango_early_init,
 	.extensions_init	= mango_extensions_init,
 };

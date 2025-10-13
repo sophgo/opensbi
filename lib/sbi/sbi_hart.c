@@ -33,6 +33,7 @@ static unsigned long hart_features_offset;
 
 static void mstatus_init(struct sbi_scratch *scratch)
 {
+	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 	unsigned long menvcfg_val, mstatus_val = 0;
 	int cidx;
 	unsigned int num_mhpm = sbi_hart_mhpm_count(scratch);
@@ -61,6 +62,11 @@ static void mstatus_init(struct sbi_scratch *scratch)
 	 */
 	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_10)
 		csr_write(CSR_MCOUNTEREN, -1);
+
+	if (sbi_platform_force_emulate_time_csr(plat)) {
+		csr_clear(CSR_MCOUNTEREN, MCOUNTEREN_TM);
+		csr_clear(CSR_SCOUNTEREN, MCOUNTEREN_TM);
+	}
 
 	/* All programmable counters will start running at runtime after S-mode request */
 	if (sbi_hart_priv_version(scratch) >= SBI_HART_PRIV_VER_1_11)
@@ -558,6 +564,7 @@ static int hart_pmu_get_allowed_bits(void)
 static int hart_detect_features(struct sbi_scratch *scratch)
 {
 	struct sbi_trap_info trap = {0};
+	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 	struct sbi_hart_features *hfeatures =
 		sbi_scratch_offset_ptr(scratch, hart_features_offset);
 	unsigned long val, oldval;
@@ -673,10 +680,12 @@ __mhpm_skip:
 	}
 
 	/* Detect if hart supports time CSR */
-	csr_read_allowed(CSR_TIME, (unsigned long)&trap);
-	if (!trap.cause)
-		__sbi_hart_update_extension(hfeatures,
-					SBI_HART_EXT_TIME, true);
+	if (!sbi_platform_force_emulate_time_csr(plat)) {
+		csr_read_allowed(CSR_TIME, (unsigned long)&trap);
+		if (!trap.cause)
+			__sbi_hart_update_extension(hfeatures,
+						    SBI_HART_EXT_TIME, true);
+	}
 
 	/* Detect if hart has AIA local interrupt CSRs */
 	csr_read_allowed(CSR_MTOPI, (unsigned long)&trap);

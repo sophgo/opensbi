@@ -19,6 +19,11 @@ config FDT_TIMER_PLMT
 	select TIMER_PLMT
 	default n
 
+config FDT_TIMER_SG2042_GMT
+	bool "SOPHGO SG2042 global mtimer FDT driver"
+	select TIMER_SG2042_GMT
+	default n
+
 endif
 
 config TIMER_MTIMER
@@ -27,6 +32,10 @@ config TIMER_MTIMER
 
 config TIMER_PLMT
 	bool "Andes PLMT support"
+	default n
+
+config TIMER_SG2042_GMT
+	bool "SOPHGO SG2042 GMT support"
 	default n
 
 endmenu

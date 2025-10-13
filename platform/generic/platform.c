@@ -134,6 +134,14 @@ static bool generic_cold_boot_allowed(u32 hartid)
 	return true;
 }
 
+static bool generic_force_emulate_time_csr(void)
+{
+	if (generic_plat && generic_plat->force_emulate_time_csr)
+		return generic_plat->force_emulate_time_csr(generic_plat_match);
+
+	return false;
+}
+
 static int generic_nascent_init(void)
 {
 	if (platform_has_mlevel_imsic)
@@ -284,6 +292,7 @@ static int generic_console_init(void)
 
 const struct sbi_platform_operations platform_ops = {
 	.cold_boot_allowed	= generic_cold_boot_allowed,
+	.force_emulate_time_csr	= generic_force_emulate_time_csr,
 	.nascent_init		= generic_nascent_init,
 	.early_init		= generic_early_init,
 	.final_init		= generic_final_init,

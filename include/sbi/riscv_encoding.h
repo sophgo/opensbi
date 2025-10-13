@@ -223,6 +223,8 @@
 #define ENVCFG_CBIE_INV			_UL(0x3)
 #define ENVCFG_FIOM			_UL(0x1)
 
+#define MCOUNTEREN_TM			(_UL(1) << 1)
+
 /* ===== User-level CSRs ===== */
 
 /* User Trap Setup (N-extension) */
