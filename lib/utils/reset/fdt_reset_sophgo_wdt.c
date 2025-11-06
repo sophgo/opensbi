@@ -70,6 +70,8 @@ static int sophgo_wdt_system_get_top_base(void *fdt,
 	const fdt32_t *val;
 	int len, noff;
 
+	noff = 0;
+
 	val = fdt_getprop(fdt, nodeoff, "subctrl-syscon", &len);
 	if (val || len >= sizeof(fdt32_t)) {
 		noff = fdt_node_offset_by_phandle(fdt, fdt32_to_cpu(*val));
