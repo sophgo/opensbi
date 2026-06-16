@@ -59,15 +59,20 @@ static void sg2042gmt_timer_event_start(u64 next_event)
 
 	u64 global_timer = readq_relaxed((void *)sg2042gmt.mtimer_base);
 	u64 clint_timer = csr_read(CSR_TIME);
-	u64 delta_global_timer, delta_clint_timer;
+	u64 next_global_timer, delta_global_timer, delta_clint_timer;
 
-	delta_global_timer =
-		(next_event * (sg2042gmt.actual_freq / sg2042gmt.declared_freq)) - global_timer;
+	next_global_timer = next_event * (sg2042gmt.actual_freq / sg2042gmt.declared_freq);
+
+	if (next_global_timer <= global_timer)
+		delta_global_timer = 1;
+	else
+		delta_global_timer = next_global_timer - global_timer;
 
 	delta_clint_timer = delta_global_timer * (sg2042gmt.timecmp_freq / sg2042gmt.actual_freq);
 
 	next_event = clint_timer + delta_clint_timer;
 
+	writel_relaxed(-1U, timecmp_addr(hart_id));
 	writel_relaxed(next_event >> 32, timecmp_addr(hart_id) + 4);
 	writel_relaxed(next_event & 0xffffffff, timecmp_addr(hart_id));
 }
