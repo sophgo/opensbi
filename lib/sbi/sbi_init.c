@@ -118,7 +118,7 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 {
 	int rc;
 	unsigned long *init_count;
-	// const struct sbi_platform *plat = sbi_platform_ptr(scratch);
+	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 
 	/* Note: This has to be first thing in coldboot init sequence */
 	rc = sbi_scratch_init(scratch);
@@ -139,9 +139,9 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	if (rc)
 		sbi_hart_hang();
 
-	// rc = sbi_platform_early_init(plat, TRUE);
-	// if (rc)
-	// 	sbi_hart_hang();
+	rc = sbi_platform_early_init(plat, TRUE);
+	if (rc)
+		sbi_hart_hang();
 
 	rc = sbi_hart_init(scratch, TRUE);
 	if (rc)
@@ -153,18 +153,18 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 		sbi_hart_hang();
 #endif
 
-	// rc = sbi_platform_irqchip_init(plat, TRUE);
-	// if (rc) {
-	// 	sbi_printf("%s: platform irqchip init failed (error %d)\n",
-	// 		   __func__, rc);
-	// 	sbi_hart_hang();
-	// }
+	rc = sbi_platform_irqchip_init(plat, TRUE);
+	if (rc) {
+		sbi_printf("%s: platform irqchip init failed (error %d)\n",
+			   __func__, rc);
+		sbi_hart_hang();
+	}
 
-	// rc = sbi_ipi_init(scratch, TRUE);
-	// if (rc) {
-	// 	sbi_printf("%s: ipi init failed (error %d)\n", __func__, rc);
-	// 	sbi_hart_hang();
-	// }
+	rc = sbi_ipi_init(scratch, TRUE);
+	if (rc) {
+		sbi_printf("%s: ipi init failed (error %d)\n", __func__, rc);
+		sbi_hart_hang();
+	}
 
 	rc = sbi_tlb_init(scratch, TRUE);
 	if (rc) {
@@ -208,12 +208,12 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	 * Note: Platform final initialization should be last so that
 	 * it sees correct domain assignment and PMP configuration.
 	 */
-	// rc = sbi_platform_final_init(plat, TRUE);
-	// if (rc) {
-	// 	sbi_printf("%s: platform final init failed (error %d)\n",
-	// 		   __func__, rc);
-	// 	sbi_hart_hang();
-	// }
+	rc = sbi_platform_final_init(plat, TRUE);
+	if (rc) {
+		sbi_printf("%s: platform final init failed (error %d)\n",
+			   __func__, rc);
+		sbi_hart_hang();
+	}
 #ifdef CONFIG_SKIP_UBOOT
 	generic_fdt_fixup_chosen();
 #endif
@@ -232,7 +232,9 @@ static void init_warm_startup(struct sbi_scratch *scratch, u32 hartid)
 {
 	int rc;
 	unsigned long *init_count;
+#ifdef CONFIG_SUSPEND
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
+#endif
 
 	if (!init_count_offset)
 		sbi_hart_hang();
@@ -240,15 +242,15 @@ static void init_warm_startup(struct sbi_scratch *scratch, u32 hartid)
 	rc = sbi_hsm_init(scratch, hartid, FALSE);
 	if (rc)
 		sbi_hart_hang();
-
+#ifdef CONFIG_SUSPEND
 	rc = sbi_platform_early_init(plat, FALSE);
 	if (rc)
 		sbi_hart_hang();
-
+#endif
 	rc = sbi_hart_init(scratch, FALSE);
 	if (rc)
 		sbi_hart_hang();
-
+#ifdef CONFIG_SUSPEND
 	rc = sbi_platform_irqchip_init(plat, FALSE);
 	if (rc)
 		sbi_hart_hang();
@@ -256,7 +258,7 @@ static void init_warm_startup(struct sbi_scratch *scratch, u32 hartid)
 	rc = sbi_ipi_init(scratch, FALSE);
 	if (rc)
 		sbi_hart_hang();
-
+#endif
 	rc = sbi_tlb_init(scratch, FALSE);
 	if (rc)
 		sbi_hart_hang();
@@ -268,11 +270,11 @@ static void init_warm_startup(struct sbi_scratch *scratch, u32 hartid)
 	rc = sbi_hart_pmp_configure(scratch);
 	if (rc)
 		sbi_hart_hang();
-
+#ifdef CONFIG_SUSPEND
 	rc = sbi_platform_final_init(plat, FALSE);
 	if (rc)
 		sbi_hart_hang();
-
+#endif
 	init_count = sbi_scratch_offset_ptr(scratch, init_count_offset);
 	(*init_count)++;
 

@@ -143,6 +143,20 @@ deps-y+=$(libsbi-objs-path-y:.o=.dep)
 deps-y+=$(libsbiutils-objs-path-y:.o=.dep)
 deps-y+=$(firmware-objs-path-y:.o=.dep)
 
+ifeq (,$(wildcard ${PM_SRAM_BIN_PATH}))
+	ifeq (${CHIP_ARCH},CV180X)
+		PM_SRAM_BIN_PATH=${OPENSBI_PATH}/pm_default_cv180x.bin
+	endif
+	ifeq (${CHIP_ARCH},CV181X)
+		PM_SRAM_BIN_PATH=${OPENSBI_PATH}/pm_default_cv181x.bin
+	endif
+else
+ifeq ($(filter clean %clean clean%,$(MAKECMDGOALS)),)
+$(shell touch -c platform\generic\cvitek_riscv.c > /dev/null)
+endif
+endif
+$(info PM_SRAM_BIN_PATH is '${PM_SRAM_BIN_PATH}')
+
 # Setup platform ABI, ISA and Code Model
 ifndef PLATFORM_RISCV_ABI
   ifneq ($(PLATFORM_RISCV_TOOLCHAIN_DEFAULT), 1)
@@ -213,6 +227,9 @@ endif
 ifeq (${CONFIG_SKIP_UBOOT_DEBUG},y)
 $(eval $(call add_define,CONFIG_SKIP_UBOOT_DEBUG))
 endif
+ifeq ($(SUSPEND),y)
+$(eval $(call add_define,CONFIG_SUSPEND))
+endif
 
 CFLAGS		=	-g -Wall -Werror -ffreestanding -nostdlib -fno-strict-aliasing -O2
 CFLAGS		+=	-fno-omit-frame-pointer -fno-optimize-sibling-calls
@@ -223,6 +240,13 @@ CFLAGS		+=	$(GENFLAGS)
 CFLAGS		+=	$(platform-cflags-y)
 CFLAGS		+=	-fno-pie -no-pie
 CFLAGS		+=	$(firmware-cflags-y)
+CFLAGS		+=	-DPM_SRAM_BIN_PATH=$(PM_SRAM_BIN_PATH)
+ifeq ($(CHIP_ARCH),CV180X)
+CFLAGS		+=	-DCONFIG_CV180X
+endif
+ifeq (${CHIP_ARCH},CV181X)
+CFLAGS		+=	-DCONFIG_CV181X
+endif
 
 CPPFLAGS	+=	$(GENFLAGS)
 CPPFLAGS	+=	$(platform-cppflags-y)
