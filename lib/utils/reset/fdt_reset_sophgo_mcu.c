@@ -5,6 +5,7 @@
  */
 
 #include <libfdt.h>
+#include <sbi/riscv_io.h>
 #include <sbi/sbi_hart.h>
 #include <sbi/sbi_types.h>
 #include <sbi/sbi_error.h>
@@ -13,6 +14,10 @@
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/reset/fdt_reset.h>
 #include <sbi_utils/i2c/fdt_i2c.h>
+
+#define CLOCK_BASE 0x7030012000
+#define CLKENREG0 (void *)CLOCK_BASE
+#define CLKENREG0_I2CEN BIT(26)
 
 #define MANGO_BOARD_TYPE		0x80
 #define MANGO_BOARD_TYPE_MASK		1 << 7
@@ -40,6 +45,13 @@ static int mango_system_reset_check(u32 type, u32 reason)
 	}
 
 	return 0;
+}
+
+static inline void mango_i2c_clk_enable() 
+{
+	uint32_t clkenreg0 = readl(CLKENREG0);
+	clkenreg0 |= CLKENREG0_I2CEN;
+	writel(clkenreg0, CLKENREG0);
 }
 
 static inline int mango_sanity_check(struct i2c_adapter *adap, uint32_t reg)
@@ -86,6 +98,10 @@ static void mango_system_reset(u32 type, u32 reason)
 	uint32_t reg = mango.reg;
 	int ret;
 	if (adap) {
+
+		// Ensure I2C is enabled
+		mango_i2c_clk_enable();
+
 		/* sanity check */
 		ret = mango_sanity_check(adap, reg);
 		if (ret) {
